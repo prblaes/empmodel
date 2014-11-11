@@ -39,7 +39,10 @@ fprintf('Should take about %.1f minutes to run (one node)\n',cellsxtimes*timefac
 %% input current pulse, defined versus altitude and time. 
 
 % set up source file: will be an array of doubles, size (source alt) x tsteps.
-in.source = createEmpSource(in);
+if(in.decaytype >= 0)
+    in.source = createEmpSource(in);
+end
+
 nt_source = size(in.source,2);
 nalt_source = size(in.source,1);
 

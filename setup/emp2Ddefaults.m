@@ -103,7 +103,7 @@ inputs.Bmag = 50000e-9;
 
 % cluster and number of nodes
 inputs.cluster = 'batchnew';
-inputs.numnodes = '8';
+inputs.numnodes = '12';
 
 % gravity waves! gwave reaches mag (as DN/N0) at maxalt and then stays
 % there. kh is 2*pi/horizontal wavelength.

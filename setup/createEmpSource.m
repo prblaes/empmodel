@@ -1,7 +1,7 @@
 
 function Jsv = createEmpSource(in)
 
-testing = 0;
+testing = 1;
 
 %in.lightningtype = 1;
 
@@ -150,6 +150,11 @@ if in.lightningtype == 0,
         end
         
     end
+
+    % flip for negative rs speeds
+    if in.rsspeed < 0,
+        Jsv = flipud(Jsv);
+    end
     
     %% IC source
 elseif in.lightningtype == 1,
@@ -196,11 +201,12 @@ end
 %% we only need to keep Jsv up to about 0.1 ms. Find it automatically though.
 
 ind = find(mean(Jsv,1) > 1e-6, 1, 'last');
-Jsv = Jsv(:,1:ind);
+Jsv = flipud(Jsv(:,1:ind));
 
 if testing,
     figure;
-    imagesc(in.dt*(1:ind)*1e3,in.dr1*(1:nstotal)/1e3,Jsv);
+    imagesc(in.dt*(1:ind)*1e3,in.dr1*(1:nstotal)/1e3,Jsv/1e3);
     axis xy;
+    colorbar;
 end
 
