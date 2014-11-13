@@ -2,6 +2,7 @@
 % to create the inputs.dat file that will be read by emp2d. 
 
 function [in,jobid] = emp2Drun(in)
+PLOT = 0;
 
 loadconstants;
 
@@ -236,47 +237,47 @@ fclose(fid);
 
 
 %% quick plots
+if PLOT
+    h1 = figure(1);
+    set(h1,'position',[100 100 600 600]);
+    ax1 = subplot(221);
+    plot(ax1,log10(ne),(r-RE)/1000);
+    hold(ax1,'on');
+    %plot(ax1,log10(nec),(r-RE)/1000,'.');
+    plot(ax1,log10(ni),(r-RE)/1000,'r');
+    legend(ax1,'electron density','+ion density');
 
-h1 = figure(1);
-set(h1,'position',[100 100 600 600]);
-ax1 = subplot(221);
-plot(ax1,log10(ne),(r-RE)/1000);
-hold(ax1,'on');
-%plot(ax1,log10(nec),(r-RE)/1000,'.');
-plot(ax1,log10(ni),(r-RE)/1000,'r');
-legend(ax1,'electron density','+ion density');
+    % collision frequency for electrons
+    if in.planet == 0,
+        mue = 1.4856 * ndt(in.nground+1) ./ ndt;
+    else
+        mue = 0.0018 * ndt(in.nground+1) ./ ndt;
+    end
+    nue = (QE / ME) ./ mue;
+    nui = nue / 100;
 
-% collision frequency for electrons
-if in.planet == 0,
-    mue = 1.4856 * ndt(in.nground+1) ./ ndt;
-else
-    mue = 0.0018 * ndt(in.nground+1) ./ ndt;
+    ax2 = subplot(222);
+    plot(ax2,log10(nue),(r-RE)/1000);
+    hold(ax2,'on');
+    plot(ax2,log10(nui),(r-RE)/1000,'r');
+    legend(ax2,'electron coll. freq.','ion coll. freq.');
+
+    % source
+
+    ax3 = subplot(223);
+    tvec = in.dt*(0:1:(nt_source-1));
+    hvec = in.dr1*(0:1:(nalt_source-1));
+    imagesc(tvec*1e6,hvec/1e3,in.source,'parent',ax3);
+    axis(ax3,'xy');
+    xlabel(ax3,'time (us)');
+    ylabel(ax3,'Altitude (km)');
+
+    ax4 = subplot(224);
+    plot(ax4,nd.temp,(r-RE)/1000);
+    xlabel(ax4,'Ambient Temperature');
+
+    drawnow;
 end
-nue = (QE / ME) ./ mue;
-nui = nue / 100;
-
-ax2 = subplot(222);
-plot(ax2,log10(nue),(r-RE)/1000);
-hold(ax2,'on');
-plot(ax2,log10(nui),(r-RE)/1000,'r');
-legend(ax2,'electron coll. freq.','ion coll. freq.');
-
-% source
-
-ax3 = subplot(223);
-tvec = in.dt*(0:1:(nt_source-1));
-hvec = in.dr1*(0:1:(nalt_source-1));
-imagesc(tvec*1e6,hvec/1e3,in.source,'parent',ax3);
-axis(ax3,'xy');
-xlabel(ax3,'time (us)');
-ylabel(ax3,'Altitude (km)');
-
-ax4 = subplot(224);
-plot(ax4,nd.temp,(r-RE)/1000);
-xlabel(ax4,'Ambient Temperature');
-
-drawnow;
-
 
 %% run the simulation
 
@@ -289,16 +290,27 @@ if (in.submitjob),
     % run command
     
     system(['cp ' in.exedir in.exefile ' ' in.rundir]);
+
+
+    %copy the submission script, for later reference
+    system(['cp ' in.submission_script ' ' in.rundir]);
     
     % for simplicity, cd into run directory, run it, then return to pwd
     
     thisdir = pwd;
     cd(in.rundir);
+
+    jobname = '';
+    if length(in.runname) <= 15
+        jobname = in.runname;
+    else
+        jobname = in.runname(1:15);
+    end
     
     if strcmp(in.cluster,'local'),
         submitstr = ['sh ' pbsfile ' &'];
     else
-        submitstr = ['qsub -q ' in.cluster ' -d ' in.rundir ' -l nodes=1:ppn=' in.numnodes ' -l walltime=72:00:00 ' ...
+        submitstr = ['qsub -q ' in.cluster ' -N ' jobname ' -d ' in.rundir ' -l nodes=1:ppn=' in.numnodes ' -l walltime=72:00:00 ' ...
             pbsfile];
     end
     

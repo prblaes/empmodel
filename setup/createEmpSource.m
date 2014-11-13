@@ -1,7 +1,7 @@
 
 function Jsv = createEmpSource(in)
 
-testing = 1;
+testing = 0;
 
 %in.lightningtype = 1;
 
