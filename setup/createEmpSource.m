@@ -105,7 +105,7 @@ if in.lightningtype == 0,
                 
             elseif decaytype == 2,   % MTLE
                 
-                rssigma = in.sourcealt/3;      % decay length for MTLE
+                rssigma = in.sourcealt * in.mtle_scale_height;      % decay length for MTLE
                 Jsv(i,t) = in.Iin(tJs) * exp(-(r(i)-in.Re)/rssigma);
                 
             elseif decaytype == 3,   % BG

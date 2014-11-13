@@ -9,6 +9,8 @@ import os
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
+import gzip
+import cPickle
 
 vp = 2.998e8
 
@@ -61,17 +63,17 @@ def get_elve(run_dir, inputs):
 
     return elve
     
-    
-    
 
-if __name__ == '__main__':
-    from ipdb import launch_ipdb_on_exception
-    
-    plt.ion()
-    with launch_ipdb_on_exception():
-        pkIs = []
-        rsspeeds = []
-        elve_intensities = []
+def read_data():
+    if os.path.exists('data.pkl.gz'):
+        with gzip.open('data.pkl.gz', 'rb') as f:
+            data = cPickle.load(f)
+            elves = data['elves']
+            inputs = data['inputs']
+
+    else:
+        elves = []
+        inputs = []
 
         #get list of runs in the run directory
         run_list = glob.glob(os.path.join(RUN_DIR, '*'))
@@ -83,22 +85,39 @@ if __name__ == '__main__':
 
             #read the inputs from this run
             with open(os.path.join(run, 'inputs.json'), 'r') as fid:
-                inputs = json.load(fid)
-
-                elve = get_elve(run, inputs)
-                
-                pkIs.append(inputs['I0']/1e3)
-                rsspeeds.append(-1*inputs['rsspeed']/vp)
-                elve_intensities.append(np.mean(elve['N21P']))
+                inputs.append(json.load(fid))
+                elve = get_elve(run, inputs[-1])
+                elves.append(elve)
 
         print('')
 
-        cm = plt.cm.get_cmap('jet') 
-        plt.figure(facecolor='white')
-        plt.scatter(pkIs, rsspeeds, c=np.log(elve_intensities), lw=0, s=500, cmap=cm)
-        plt.xlabel('peak current, kA', fontsize=14)
-        plt.ylabel('return stroke speed, $c$', fontsize=14)
-        plt.title('Elve $\mathrm{N}_2\,1\mathrm{P}$ Brightness')
-        cbar = plt.colorbar()
-        cbar.set_label('log(kR)')
-        plt.savefig('figures/brightness_vs_source_params.eps', format='eps')
+        with gzip.open('data.pkl.gz', 'wb') as f:
+            cPickle.dump({'elves': elves, 'inputs': inputs}, f)
+
+    return elves, inputs
+
+   
+
+if __name__ == '__main__':
+    
+    elves, inputs = read_data()    
+
+    pkIs = []
+    rsspeeds = []
+    elve_intensities = []
+
+    for i, elve in enumerate(elves):
+        pkIs.append(inputs[i]['I0']/1e3)
+        rsspeeds.append(-1*inputs[i]['rsspeed']/vp)
+        elve_intensities.append(np.mean(elve['N21P']))
+
+    plt.ion()
+    cm = plt.cm.get_cmap('jet') 
+    plt.figure(facecolor='white')
+    plt.scatter(pkIs, rsspeeds, c=np.log(elve_intensities), lw=0, s=500, cmap=cm)
+    plt.xlabel('peak current, kA', fontsize=14)
+    plt.ylabel('return stroke speed, $c$', fontsize=14)
+    plt.title('Elve $\mathrm{N}_2\,1\mathrm{P}$ Brightness')
+    cbar = plt.colorbar()
+    cbar.set_label('log(kR)')
+    plt.savefig('figures/brightness_vs_source_params.eps', format='eps')

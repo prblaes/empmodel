@@ -92,6 +92,7 @@ inputs.chlength = 2e3;  % channel length for IC, ignored by CG
 inputs.taur = 10e-6;
 inputs.tauf = 100e-6;
 inputs.rsspeed = -0.75*vp; % for CG, downwards by default; if negative, goes upwards
+inputs.mtle_scale_height = 1/3;  %the decay constant for MTLE.  fraction of the channel length
 inputs.decaytype = 1;
 % choices: 0 = TL, 1 = MTLL, 2 = MTLE, 3 = BG, 4 = TCS, 5 = DU, 6 = dummy
 
